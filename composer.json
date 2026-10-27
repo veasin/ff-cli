@@ -1,0 +1,22 @@
+{
+  "name": "veasin/ff-cli",
+  "description": "CLI capability layer for ff: input/output/routing via ext system.",
+  "type": "library",
+  "license": "LGPL-3.0-or-later",
+  "require": {
+    "php": ">=8.5",
+    "veasin/ff": ">=0.4.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "ff\\cli\\": "src/"
+    },
+    "files": [
+      "src/args.php",
+      "src/output/cli.php",
+      "src/route/cli.php",
+      "src/color.php",
+      "bootstrap.php"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+/composer.lock
+/vendor
+/.idea
+/.idea/*
+/.opencode/
+/AGENTS.md
+php_errors.log
