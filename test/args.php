@@ -135,4 +135,4 @@ test("大规模参数处理", function(){
 	return count($result) === 201; // 100个短选项 + 100个长选项 + 1个参数
 });
 
-test() |> (fn($a)=>json_encode($a, JSON_UNESCAPED_UNICODE |JSON_UNESCAPED_SLASHES)) |> printf(...);
+test() |> \ff\cli\report(...);

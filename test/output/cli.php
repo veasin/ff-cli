@@ -44,4 +44,4 @@ $out = shell_exec(PHP_BINARY . ' ' . escapeshellarg($tmp) . ' 2>&1');
 test('404 空输出', $out ?? '', '');
 unlink($tmp);
 
-test() |> (fn($a)=>json_encode($a, JSON_UNESCAPED_UNICODE |JSON_UNESCAPED_SLASHES)) |> printf(...);
+test() |> \ff\cli\report(...);
