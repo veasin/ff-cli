@@ -8,7 +8,7 @@
 composer require veasin/ff-cli
 ```
 
-依赖 PHP 8.6+ 与 `veasin/ff >=0.5.0`。
+依赖 PHP 8.6+ 与 `veasin/ff >=0.5.1`。
 
 ## 启用 CLI 能力
 
@@ -23,7 +23,7 @@ enable('cli-test');             // 测试失败时输出结果并 exit(1)
 enable('cli', 'cli-test');      // 同时启用
 ```
 
-`cli` 会写入 `^#ext.from.input`、`^#ext.from.params`、`^#out.type => 'raw'`、`^#out.emit => 'cli'`，之后 `from()`、`route()`、`output()` 才走 CLI 分支。`^#ext.from.input` 的 `uri` 为去掉脚本名的命令串，`params` 为 `args()` 解析结果。
+`cli` 会覆盖 `^#in.input`、`^#in.params` 两个来源 loader（ff 0.5.1 起 `from()` 统一走 `container('#in.$source?')`），并写入 `^#out.type => 'raw'`、`^#out.emit => 'cli'`，之后 `from()`、`route()`、`output()` 才走 CLI 分支。`input` 的 `uri` 为去掉脚本名的命令串，`params` 为 `args()` 解析结果。
 
 `cli-test` 只设置 `^#out.emit => 'cli'` 并注册测试收尾 hook，不启用 CLI 输入和路由。测试中需要匹配 `cli:` 路由时使用 `enable('cli', 'cli-test')`。
 
@@ -204,6 +204,7 @@ exit(empty($result['failed']) ? 0 : 1);   // 需要 CI 退出码时自行设置
 
 ```bash
 php test/args.php
+php test/cli_input.php
 php test/route/cli.php
 php test/route/script.php
 php test/output/cli.php
@@ -222,14 +223,14 @@ exit(empty($result['failed']) ? 0 : 1);
 `ff-cli` 通过 ext 系统注册能力：
 
 1. **惰性注册**：`bootstrap.php` 注册 `^#ext.out.emit.cli`、`^#ext.route.cli`（`match` + `normalize`）、`^#route.methods.cli`、`^#ext.enable`（`cli` / `cli-test`）、`^i18n.#ff.test` 和 `^i18n.#ff.cli.script`
-2. **显式启用**：`enable('cli')` 写入 `^#ext.from.input`、`^#ext.from.params`、`^#out.type => 'raw'`、`^#out.emit => 'cli'`
+2. **显式启用**：`enable('cli')` 覆盖 `^#in.input`、`^#in.params` 来源 loader，并写入 `^#out.type => 'raw'`、`^#out.emit => 'cli'`
 3. **测试收尾**：`enable('cli-test')` 写入 `^#out.emit => 'cli'` 并注册 after hook；失败时输出 JSON 并 `exit(1)`，全部通过时静默。注意 `test()` 执行一次后清空用例，该 hook 仅在测试文件未自行调用 `test()` 时有效
 4. **不改变 Web 行为**：正常 Web 请求（GET/POST 等）不会命中任何 ff-cli 注册的 handler
 
 ## 与 ff 核心的关系
 
 - `ff` 核心不包含任何 CLI 专用函数
-- `ff-cli` 依赖 `veasin/ff >=0.5.0` 与 PHP 8.6+，内部使用 PFA（`?` 占位）与 `|>` 管道组合
-- 核心的 `from()`、`route()`、`output()` 已改为 ext 驱动，CLI 行为由 ff-cli 通过 ext 提供
+- `ff-cli` 依赖 `veasin/ff >=0.5.1` 与 PHP 8.6+，内部使用 PFA（`?` 占位）与 `|>` 管道组合
+- 核心的 `from()` 由 `#in.*` 来源 loader 驱动、`route()` / `output()` 由 ext 驱动；CLI 行为由 ff-cli 覆盖 `^#in.input` / `^#in.params` 并提供对应 ext handler 实现
 - `script()` 基于 `route()` 的 `cli:` 协议与 `^#ext.route.cli` 的 `normalize` 能力
 - `report()` 使用核心 `test()` 返回值与 i18n 文案，不修改测试执行逻辑

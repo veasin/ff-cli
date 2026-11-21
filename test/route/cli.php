@@ -19,9 +19,10 @@ test('参数原样返回', $result['params'], ['hello']);
 
 // 测试 3 改为：cli() 单独调用不写容器（职责在 route）
 $cliOnly = cli(['cli:hello' => fn($next) => true], ['hello'], 'hello', 'cli');
-container('#in.params', null);   // 先清空
+container('#in.params', null);   // 先清空请求级，持久级默认 [] 生效
+$before = container('#in.params');
 $cliOnly = cli(['cli:hello' => fn($next) => true], ['hello'], 'hello', 'cli');
-test('cli() 单独不写 #in.params', container('#in.params'), null);
+test('cli() 单独不写 #in.params', container('#in.params'), $before);
 test('cli() 返回 params 正确', $cliOnly['params'], ['hello']);
 
 // 测试 4: 未匹配返回 null

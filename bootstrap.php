@@ -1,6 +1,6 @@
 <?php
 // bootstrap.php — ff-cli 自注册：只注册 ext handler、文案与 enable 入口，不改变运行时的输入/输出
-// 会改变全局行为的写入（^#ext.from.input/params、^#out.type、^#out.emit）只在 enable() handler 中执行
+// 会改变全局行为的写入（^#in.input/params、^#out.type、^#out.emit）只在 enable() handler 中执行
 use function ff\{container, hook};
 
 container([
@@ -16,12 +16,12 @@ container([
 container('^#route.methods.cli', 'cli');
 container('^#ext.enable', [
 	'cli' => fn() => container([
-		'^#ext.from.input' => fn() => [
+		'^#in.input' => fn() => [
 			'method' => 'cli',
 			'protocol' => null,
 			'uri' => $_SERVER['argv'] |> array_slice(?, 1) |> implode(' ', ?),
 		],
-		'^#ext.from.params' => fn() => $_SERVER['argv'] |> array_slice(?, 1) |> \ff\cli\args(...),
+		'^#in.params' => fn() => $_SERVER['argv'] |> array_slice(?, 1) |> \ff\cli\args(...),
 		'^#out.type' => 'raw',
 		'^#out.emit' => 'cli',
 	]),
