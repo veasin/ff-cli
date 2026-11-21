@@ -19,15 +19,15 @@ container('^#ext.enable', [
 		'^#ext.from.input' => fn() => [
 			'method' => 'cli',
 			'protocol' => null,
-			'uri' => implode(' ', array_slice($_SERVER['argv'], 1)),
+			'uri' => $_SERVER['argv'] |> array_slice(?, 1) |> implode(' ', ?),
 		],
-		'^#ext.from.params' => fn() => \ff\cli\args(array_slice($_SERVER['argv'], 1)),
+		'^#ext.from.params' => fn() => $_SERVER['argv'] |> array_slice(?, 1) |> \ff\cli\args(...),
 		'^#out.type' => 'raw',
 		'^#out.emit' => 'cli',
 	]),
-	'cli-test' => function(){
+	'cli-test' => function(): void{
 		container('^#out.emit', 'cli');
-		hook('after', function(){
+		hook('after', static function(): void{
 			// 测试收尾：失败时 JSON 输出 test() 结果并 exit(1)；全部通过时静默
 			$r = \ff\test();
 			if($r['failed'] ?? []){

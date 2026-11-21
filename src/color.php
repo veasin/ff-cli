@@ -14,11 +14,11 @@ namespace ff\cli;
 function color(string $text): string{
 	$match = '/\[([krgybmcwnKRGYBMCW ]?)(:?)([krgybmcwnKRGYBMCW ]?)]/';
 	if(PHP_SAPI!=='cli') return preg_replace($match, '', $text);
-	return preg_replace_callback($match, static function($m){
-			$fg = ['k' => 30, 'r' => 31, 'g' => 32, 'y' => 33, 'b' => 34, 'm' => 35, 'c' => 36, 'w' => 37, 'n' => 90, 'K' => 90, 'R' => 91, 'G' => 92, 'Y' => 93, 'B' => 94, 'M' => 95, 'C' => 96, 'W' => 97, ' ' => 39];
-			$bg = ['k' => 40, 'r' => 41, 'g' => 42, 'y' => 43, 'b' => 44, 'm' => 45, 'c' => 46, 'w' => 47, 'K' => 100, 'R' => 101, 'G' => 102, 'Y' => 103, 'B' => 104, 'M' => 105, 'C' => 106, 'W' => 107, ' ' => 49];
-			if($m[1] === '' && $m[2] === ':' && $m[3] === '') return "\033[39;49m";
-			$codes = array_filter([$fg[$m[1]] ?? null, $m[2] === ':' ? ($bg[$m[3]] ?? null) : null]);
-			return $codes ? "\033[" . implode(';', $codes) . "m" : '';
-		}, $text) . "\033[0m";
+	return preg_replace_callback($match, static function(array $m): string{
+		static $fg = ['k' => 30, 'r' => 31, 'g' => 32, 'y' => 33, 'b' => 34, 'm' => 35, 'c' => 36, 'w' => 37, 'n' => 90, 'K' => 90, 'R' => 91, 'G' => 92, 'Y' => 93, 'B' => 94, 'M' => 95, 'C' => 96, 'W' => 97, ' ' => 39];
+		static $bg = ['k' => 40, 'r' => 41, 'g' => 42, 'y' => 43, 'b' => 44, 'm' => 45, 'c' => 46, 'w' => 47, 'K' => 100, 'R' => 101, 'G' => 102, 'Y' => 103, 'B' => 104, 'M' => 105, 'C' => 106, 'W' => 107, ' ' => 49];
+		if($m[1] === '' && $m[2] === ':' && $m[3] === '') return "\033[39;49m";
+		$codes = array_filter([$fg[$m[1]] ?? null, $m[2] === ':' ? ($bg[$m[3]] ?? null) : null]);
+		return $codes ? "\033[" . implode(';', $codes) . "m" : '';
+	}, $text) . "\033[0m";
 }

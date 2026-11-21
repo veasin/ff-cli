@@ -112,7 +112,7 @@ function args(array|string $input): array{
 	$i = 0;
 	$stop = false;
 	$n = count($args);
-	$unquote = function($v){
+	$unquote = static function(mixed $v): mixed{
 		if(!is_string($v)) return $v;
 		$len = strlen($v);
 		if($len > 1 && (($v[0] === '"' && $v[$len - 1] === '"') || ($v[0] === "'" && $v[$len - 1] === "'"))) return substr($v, 1, -1);

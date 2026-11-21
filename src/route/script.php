@@ -93,8 +93,8 @@ function script(array $config): array{
 	static $visible = fn(string $s): int => strlen(preg_replace('/\[([krgybmcwnKRGYBMCW ]?)(:?)([krgybmcwnKRGYBMCW ]?)]/', '', $s));
 	// 选项名格式化：f|file → -f, --file
 	static $fmt = fn(string $k): string => explode('|', $k)
-			|> (fn($x) => array_map(fn($n) => strlen($n) === 1 ? "-$n" : "--$n", $x))
-			|> (fn($x) => implode(', ', $x));
+			|> array_map(fn(string $n): string => strlen($n) === 1 ? "-$n" : "--$n", ?)
+			|> implode(', ', ?);
 	$help = function(array $meta) use ($visible, $fmt): callable{
 		$script = basename($_SERVER['argv'][0] ?? 'script');
 		// 收集所有名字行的可见宽度（缩进 + 格式化后的名字）
@@ -141,7 +141,7 @@ function script(array $config): array{
 		};
 		$top = $meta['path'] === '';
 		return fn($next) => $render($meta, 0, $top)
-				|> (fn($x) => implode("\n", $x))
+				|> implode("\n", ?)
 				|> color(...)
 				|> output(...);
 	};
@@ -163,6 +163,14 @@ function script(array $config): array{
 		if($meta['path'] !== '' || !$params) return $helpFn($next);
 		return $next();
 	};
+	$callables = static function(mixed $v, string $key): array{
+		if(is_callable($v)) return [$v];
+		if(!is_array($v)) throw new \InvalidArgumentException("script(): 键 '$key' 只接受 callable 或 callable 数组，收到 " . get_debug_type($v));
+		$list = array_values($v);
+		if(!$list) throw new \InvalidArgumentException("script(): 键 '$key' 的数组不能为空");
+		foreach($list as $fn) if(!is_callable($fn)) throw new \InvalidArgumentException("script(): 键 '$key' 的数组项必须是 callable，收到 " . get_debug_type($fn));
+		return $list;
+	};
 	$extract = function(array $list) use (&$extract): array{
 		$desc = [];
 		$args = [];
@@ -179,7 +187,7 @@ function script(array $config): array{
 		return ['desc' => $desc, 'args' => $args, 'subs' => $subs];
 	};
 	$routes = [];
-	$expand = function(array $list, string $path, array $inherited = []) use (&$expand, &$routes, $help, $unknown, $withHelp, $gate, $extract): void{
+	$expand = function(array $list, string $path, array $inherited = []) use (&$expand, &$routes, $help, $unknown, $withHelp, $gate, $callables, $extract): void{
 		$desc = [];
 		$args = [];
 		$stack = [];
@@ -193,22 +201,18 @@ function script(array $config): array{
 					is_callable($v) => $stack[] = $v,
 					$v === false => $empty ??= false,
 					$v === true => $unk ??= true,
-					is_array($v) && array_is_list($v) => $stack = [...$stack, ...array_filter($v, 'is_callable')],
+					is_array($v) && array_is_list($v) => $stack = [...$stack, ...array_filter($v, is_callable(...))],
 					is_array($v) => $args = array_merge($args, $v),
 					default => null,
 				};
 				continue;
 			}
 			if($k === ''){
-				if($v !== false && !is_callable($v) && !is_array($v))
-					throw new \InvalidArgumentException("script(): 键 '' 只接受 false/callable/array，收到 " . get_debug_type($v));
-				$empty = $v === [] ? false : $v;
+				$empty = ($v === false || $v === []) ? false : $callables($v, '');
 				continue;
 			}
 			if($k === '?'){
-				if($v !== true && !is_callable($v) && !is_array($v))
-					throw new \InvalidArgumentException("script(): 键 '?' 只接受 true/callable/array，收到 " . get_debug_type($v));
-				$unk = $v === [] ? true : $v;
+				$unk = ($v === true || $v === []) ? true : $callables($v, '?');
 				continue;
 			}
 			$subs[$k] = $v;
@@ -225,16 +229,20 @@ function script(array $config): array{
 				$routes["cli:$path"] = [...$inherited, ...$handler];
 			}
 			else{
-				$arr = (array)$empty;
-				$handler = [...array_slice($arr, 0, -1), $withHelp(end($arr), $help($meta))];
+				$list = $empty;
+				$business = array_pop($list);
+				if(!is_callable($business)) throw new \InvalidArgumentException("script(): 键 '' 的业务终点必须是 callable");
+				$handler = [...$list, $withHelp($business, $help($meta))];
 				$routes["cli:$path"] = [...$prefix, ...$handler];
 			}
 		}
 		if($unk !== null){
 			if($unk === true) $handler = [$unknown($meta, $help($meta))];
 			else{
-				$arr = (array)$unk;
-				$handler = [...array_slice($arr, 0, -1), $withHelp(end($arr), $help($meta))];
+				$list = $unk;
+				$business = array_pop($list);
+				if(!is_callable($business)) throw new \InvalidArgumentException("script(): 键 '?' 的业务终点必须是 callable");
+				$handler = [...$list, $withHelp($business, $help($meta))];
 			}
 			$routes[$path === '' ? 'cli:*' : "cli:$path *"] = [...$prefix, ...$handler];
 		}
@@ -243,6 +251,7 @@ function script(array $config): array{
 		}
 		if($empty === null && $unk === null && !$subs && $stack){
 			$business = array_pop($prefix);
+			if(!is_callable($business)) throw new \InvalidArgumentException("script(): 叶子层业务终点必须是 callable");
 			$routes["cli:$path"] = [...$prefix, $withHelp($business, $help($meta))];
 		}
 	};

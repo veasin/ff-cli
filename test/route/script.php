@@ -143,4 +143,13 @@ test("'?' => null 抛 InvalidArgumentException", fn() => script(['?' => null]), 
 test("子层 '' => true 抛 InvalidArgumentException", fn() => script(['remote' => ['' => true]]), \InvalidArgumentException::class);
 test("'?' => 闭包允许", array_keys(script(['?' => fn($next) => 'x'])), ['cli:*']);
 
+// ---- 23. callable 数组与非法数组项 ----
+$obj = new class{
+	public function run($next): mixed{ return $next(); }
+};
+test("'' 接受 callable 数组", count(script(['' => [$obj, 'run']])['cli:']), 1);
+test("'?' 接受 callable 数组", array_keys(script(['?' => [$obj, 'run']])), ['cli:*']);
+test("'' 数组项非 callable 抛 InvalidArgumentException", fn() => script(['' => [1]]), \InvalidArgumentException::class);
+test("'?' 数组项非 callable 抛 InvalidArgumentException", fn() => script(['?' => [null]]), \InvalidArgumentException::class);
+
 test() |> \ff\cli\report(...);

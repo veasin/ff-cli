@@ -8,7 +8,7 @@
 composer require veasin/ff-cli
 ```
 
-依赖 PHP 8.5+ 与 `veasin/ff >=0.4.2`。
+依赖 PHP 8.6+ 与 `veasin/ff >=0.5.0`。
 
 ## 启用 CLI 能力
 
@@ -229,7 +229,7 @@ exit(empty($result['failed']) ? 0 : 1);
 ## 与 ff 核心的关系
 
 - `ff` 核心不包含任何 CLI 专用函数
-- `ff-cli` 依赖 `veasin/ff >=0.4.2` 与 PHP 8.5+
+- `ff-cli` 依赖 `veasin/ff >=0.5.0` 与 PHP 8.6+，内部使用 PFA（`?` 占位）与 `|>` 管道组合
 - 核心的 `from()`、`route()`、`output()` 已改为 ext 驱动，CLI 行为由 ff-cli 通过 ext 提供
 - `script()` 基于 `route()` 的 `cli:` 协议与 `^#ext.route.cli` 的 `normalize` 能力
 - `report()` 使用核心 `test()` 返回值与 i18n 文案，不修改测试执行逻辑

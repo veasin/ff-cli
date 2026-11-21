@@ -20,17 +20,17 @@ namespace ff\cli\route;
  * @return ?array ['handlers'=>callable[], 'keys'=>string[], 'params'=>array] 或 null
  */
 function cli(array $normalized, array $params, string $uri, string $method): ?array{
-	$words = [];
-	foreach($params as $k => $v) if(is_int($k)) $words[] = (string)$v;
+	$words = $params
+		|> array_filter(?, is_int(...), ARRAY_FILTER_USE_KEY)
+		|> array_values(...)
+		|> array_map(strval(...), ?);
 	$fixed = [];
 	foreach($normalized as $key => $_){
 		if(!str_starts_with($key, 'cli:')) continue;
-		$p = substr($key, 4);
-		if($p === '' || in_array('*', explode(' ', $p), true)) continue;
-		$parts = explode(' ', $p);
+		$parts = explode(' ', substr($key, 4));
+		if($parts === [''] || in_array('*', $parts, true)) continue;
 		$word = array_pop($parts);
-		$prefix = implode(' ', $parts);
-		$fixed[$prefix][] = $word;
+		$fixed[implode(' ', $parts)][] = $word;
 	}
 	$handlers = [];
 	$keys = [];

@@ -2,7 +2,6 @@
 include __DIR__ . "/../../vendor/autoload.php";
 
 use function ff\{container, output, test};
-use function ff\cli\output\cli;
 
 // 每个脚本是新进程，persist 层本来就是空的
 

@@ -5,9 +5,7 @@ include __DIR__ . '/vendor/autoload.php';
 use function ff\{container, enable, output, route};
 use function ff\cli\route\script;
 
-$argv = $_SERVER['argv'];
-array_shift($argv);
-$uri = implode(' ', $argv);
+$uri = $_SERVER['argv'] |> array_slice(?, 1) |> implode(' ', ?);
 enable('cli');
 
 $param = fn(mixed $key, mixed $default = null) => (container('#in.params') ?? [])[$key] ?? $default;
